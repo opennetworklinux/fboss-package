@@ -16,7 +16,7 @@
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC=" Broadcom OpenNSL Library"
 NAME=BRCM_OpenNSL
-PLAT_FILE=/etc/onl_platform
+PLAT_FILE=/etc/onl/platform
 PLATFORM=`cat $PLAT_FILE`
 if [ -z $PLATFORM ] ; then
     echo "Failed: no platform in $PLAT_FILE"

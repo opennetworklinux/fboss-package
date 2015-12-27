@@ -39,7 +39,7 @@ VERBOSE=1
 # and status_of_proc is working.
 . /lib/lsb/init-functions
 
-PLAT_FILE=/etc/onl_platform
+PLAT_FILE=/etc/onl/platform
 PLATFORM=`cat $PLAT_FILE`
 if [ -z $PLATFORM ] ; then
     log_failure_msg "Failed: no platform in $PLAT_FILE"
