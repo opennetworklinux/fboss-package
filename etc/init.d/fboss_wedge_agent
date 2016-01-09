@@ -1,7 +1,7 @@
 #! /bin/sh
 ### BEGIN INIT INFO
 # Provides:          fboss_wedge_agent
-# Required-Start:    $syslog platform-baseconf
+# Required-Start:    $syslog onl-platform-baseconf
 # Required-Stop:     $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
