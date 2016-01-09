@@ -62,8 +62,8 @@ do_start()
         exit 0
     fi
     if [ ! -f /usr/local/lib/libopennsl.so.1 ] ; then
-	echo "\nError: OpenNSL library not found, attempting to grab from GitHub"
-	/etc/init.d/OpenNSL_download
+        echo "\nError: OpenNSL library not found, attempting to grab from GitHub"
+        /etc/init.d/OpenNSL_download
     fi
     if [ ! -f /usr/local/lib/libopennsl.so.1 ] ; then
         echo "Error: Unable to download module, please check that the management ethernet interface (ma1) is up and has internet connectivity then run /etc/init.d/OpenNSL_download"
@@ -78,18 +78,20 @@ do_start()
     log_progress_msg "; Creating devices "
     [ -e /dev/linux-kernel-bde ] || mknod /dev/linux-kernel-bde c 127 0
     [ -e /dev/linux-user-bde ] || mknod /dev/linux-user-bde c 126 0
-        # Return
-        #   0 if daemon has been started
-        #   1 if daemon was already running
-        #   2 if daemon could not be started
-        start-stop-daemon --start --make-pidfile --quiet --pidfile $PIDFILE --background \
-        --exec $DAEMON  -- $FBOSS_DAEMON_OPTIONS > /dev/null  || return 1
-    #start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON-$PLATFORM -- \
+    # Return
+    #   0 if daemon has been started
+    #   1 if daemon was already running
+    #   2 if daemon could not be started
+    start-stop-daemon --start --make-pidfile --quiet --pidfile $PIDFILE \
+        --background --exec $DAEMON  -- $FBOSS_DAEMON_OPTIONS \
+        > /dev/null  || return 1
+    #start-stop-daemon --start --quiet --pidfile $PIDFILE --exec \
+    #  $DAEMON-$PLATFORM -- \
     #   $DAEMON_ARGS \
     #   || return 2
-        # Add code here, if necessary, that waits for the process to be ready
-        # to handle requests from services started subsequently which depend
-        # on this one.  As a last resort, sleep for some time.
+    # Add code here, if necessary, that waits for the process to be ready
+    # to handle requests from services started subsequently which depend
+    # on this one.  As a last resort, sleep for some time.
 }
 
 #
@@ -97,30 +99,33 @@ do_start()
 #
 do_stop()
 {
-        # Return
-        #   0 if daemon has been stopped
-        #   1 if daemon was already stopped
-        #   2 if daemon could not be stopped
-        #   other if a failure occurred
-        start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 --pidfile $PIDFILE --exec $DAEMON
-        RETVAL="$?"
-        [ "$RETVAL" = 2 ] && return 2
-        # Wait for children to finish too if this is a daemon that forks
-        # and if the daemon is only ever run from this initscript.
-        # If the above conditions are not satisfied then add some other code
-        # that waits for the process to drop all resources that could be
-        # needed by services started subsequently.  A last resort is to
-        # sleep for some time.
-        start-stop-daemon --stop --quiet --oknodo --retry=0/30/KILL/5 --exec $DAEMON
-        [ "$?" = 2 ] && return 2
-        # Many daemons don't delete their pidfiles when they exit.
-        rm -f $PIDFILE
+    # Return
+    #   0 if daemon has been stopped
+    #   1 if daemon was already stopped
+    #   2 if daemon could not be stopped
+    #   other if a failure occurred
+    start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 --pidfile \
+      $PIDFILE --exec $DAEMON
+    RETVAL="$?"
+    [ "$RETVAL" = 2 ] && return 2
+    # Wait for children to finish too if this is a daemon that forks
+    # and if the daemon is only ever run from this initscript.
+    # If the above conditions are not satisfied then add some other code
+    # that waits for the process to drop all resources that could be
+    # needed by services started subsequently.  A last resort is to
+    # sleep for some time.
+    start-stop-daemon --stop --quiet --oknodo --retry=0/30/KILL/5 --exec $DAEMON
+    [ "$?" = 2 ] && return 2
+    # Many daemons don't delete their pidfiles when they exit.
+    rm -f $PIDFILE
+    # if you remove the modules too quickly, the kernel will crash
+    sleep 2
     log_progress_msg "    --- Removing old OpenNSL kernel modules"
     for mod in `echo $MODS | tr ' ' '\n' | sort -r` ; do
         log_progress_msg "$mod"
         rmmod $mod
     done
-        return "$RETVAL"
+    return "$RETVAL"
 }
 
 #
@@ -128,25 +133,25 @@ do_stop()
 #
 do_reload() {
         #
-        # If the daemon can reload its configuration without
-        # restarting (for example, when it is sent a SIGHUP),
-        # then implement that here.
-        #
-        start-stop-daemon --stop --signal 1 --quiet --pidfile $PIDFILE --name $N
-AME
-        return 0
+    # If the daemon can reload its configuration without
+    # restarting (for example, when it is sent a SIGHUP),
+    # then implement that here.
+    #
+    start-stop-daemon --stop --signal 1 --quiet --pidfile $PIDFILE \
+        --name $NAME
+    return 0
 }
 
 case "$1" in
-  start)
+    start)
         [ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME"
         do_start
         case "$?" in
-                0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
-                2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+            0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+            2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
         esac
         ;;
-  stop)
+    stop)
         [ "$VERBOSE" != no ] && log_daemon_msg "Stopping $DESC" "$NAME"
         do_stop
         case "$?" in
@@ -154,10 +159,10 @@ case "$1" in
                 2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
         esac
         ;;
-  status)
+    status)
         status_of_proc "$DAEMON" "$NAME" && exit 0 || exit $?
         ;;
-  #reload|force-reload)
+    #reload|force-reload)
         #
         # If do_reload() is not implemented then leave this commented out
         # and leave 'force-reload' as an alias for 'restart'.
@@ -166,7 +171,7 @@ case "$1" in
         #do_reload
         #log_end_msg $?
         #;;
-  restart|force-reload)
+    restart|force-reload)
         #
         # If the "reload" option is implemented then remove the
         # 'force-reload' alias
@@ -188,7 +193,7 @@ case "$1" in
                 ;;
         esac
         ;;
-  *)
+    *)
         #echo "Usage: $SCRIPTNAME {start|stop|restart|reload|force-reload}" >&2
         echo "Usage: $SCRIPTNAME {start|stop|status|restart|force-reload}" >&2
         exit 3
