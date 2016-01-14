@@ -20,11 +20,12 @@ DAEMON=/usr/local/bin/$NAME
 DAEMON_ARGS="--options args"
 PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
-OCP_DEMO="-config /etc/fboss/ocp-demo.json"
-SAMPLE1="-config /etc/fboss/sample1.json"
-SAMPLE2="-config /etc/fboss/sample2.json"
-SAMPLE3="-config /etc/fboss/sample3.json"
-FBOSS_DAEMON_OPTIONS=$OCP_DEMO
+MGMT_IF="-mgmt_if=ma1 "
+OCP_DEMO="-config=/etc/fboss/ocp-demo.json"
+SAMPLE1="-config=/etc/fboss/sample1.json"
+SAMPLE2="-config=/etc/fboss/sample2.json"
+SAMPLE3="-config=/etc/fboss/sample3.json"
+FBOSS_DAEMON_OPTIONS=$MGMT_IF$OCP_DEMO
 # Read configuration variable file if it is present
 [ -r /etc/default/$NAME ] && . /etc/default/$NAME
 
@@ -50,7 +51,7 @@ elif [ $PLATFORM != x86-64-accton-wedge-16x-r0 ] ; then
 fi
 
 KERNEL_MODS=/lib/modules/`uname -r`/
-MODS="linux-kernel-bde linux-user-bde"
+MODS="linux-kernel-bde linux-user-bde linux-bcm-knet"
 
 #
 # Function that starts the daemon/service
@@ -74,10 +75,13 @@ do_start()
     insmod $KERNEL_MODS/linux-kernel-bde.ko maxpayload=128 dmasize=64M
     log_progress_msg " linux-user-bde "
     insmod $KERNEL_MODS/linux-user-bde.ko
+    log_progress_msg " linux-bcm-knet "
+    insmod $KERNEL_MODS/linux-bcm-knet.ko
     # Create dev nodes
     log_progress_msg "; Creating devices "
     [ -e /dev/linux-kernel-bde ] || mknod /dev/linux-kernel-bde c 127 0
     [ -e /dev/linux-user-bde ] || mknod /dev/linux-user-bde c 126 0
+    [ -e /dev/linux-bcm-knet ] || mknod /dev/linux-bcm-knet c 122 0
         # Return
         #   0 if daemon has been started
         #   1 if daemon was already running

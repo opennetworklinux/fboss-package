@@ -27,7 +27,7 @@ elif [ $PLATFORM != x86-64-accton-wedge-16x-r0 ] ; then
 fi
 
     if [ ! -f /usr/local/lib/libopennsl.so.1 ] ; then
-    wget --no-check-certificate "https://raw.githubusercontent.com/Broadcom-Switch/OpenNSL/OpenNSL_6.3/bin/wedge-trident/libopennsl.so.1" -O /usr/local/lib/libopennsl.so.1 
+    wget --no-check-certificate "https://raw.githubusercontent.com/Broadcom-Switch/OpenNSL/8e0b499f02dcef751a3703c9a18600901374b28a/bin/wedge-trident/libopennsl.so.1" -O /usr/local/lib/libopennsl.so.1 
     fi
     if [ ! -f /usr/local/lib/libopennsl.so.1 ] ; then
         echo "Error: Still unable to download module, please check that the management ethernet interface (ma1) is up and has internet connectivity then run /etc/init.d/OpenNSL_download"
@@ -37,7 +37,7 @@ fi
 # check MD5 of downloaded opennsl binary
 
 MD5_1=$(md5sum '/usr/local/lib/libopennsl.so.1' | cut -d ' ' -f 1)
-MD5_2=3e9fa899014e103f0eede0e98c25887d
+MD5_2=5243031055ac7d591917967691c20f0b
 
     if [ $MD5_1 != $MD5_2 ] ; then
 
