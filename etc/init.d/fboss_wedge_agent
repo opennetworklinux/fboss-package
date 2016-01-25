@@ -17,15 +17,15 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC=" Facebook FBOSS agent"
 NAME=fboss_wedge_agent
 DAEMON=/usr/local/bin/$NAME
-DAEMON_ARGS="--options args"
 PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
-MGMT_IF="-mgmt_if=ma1 "
+MGMT_IF="-mgmt_if=ma1"
+COLD_BOOT="-can_warm_boot=false"
 OCP_DEMO="-config=/etc/fboss/ocp-demo.json"
 SAMPLE1="-config=/etc/fboss/sample1.json"
 SAMPLE2="-config=/etc/fboss/sample2.json"
 SAMPLE3="-config=/etc/fboss/sample3.json"
-FBOSS_DAEMON_OPTIONS=$MGMT_IF$OCP_DEMO
+FBOSS_DAEMON_OPTIONS="$MGMT_IF $OCP_DEMO $COLD_BOOT"
 # Read configuration variable file if it is present
 [ -r /etc/default/$NAME ] && . /etc/default/$NAME
 
@@ -73,10 +73,11 @@ do_start()
     log_progress_msg "    --- Loading "
     log_progress_msg " linux-kernel-bde "
     insmod $KERNEL_MODS/linux-kernel-bde.ko maxpayload=128 dmasize=64M
-    log_progress_msg " linux-user-bde "
-    insmod $KERNEL_MODS/linux-user-bde.ko
-    log_progress_msg " linux-bcm-knet "
-    insmod $KERNEL_MODS/linux-bcm-knet.ko
+    for mod in $MODS; do
+      echo $mod | grep -q kernel && continue
+      log_progress_msg " $mod "
+      insmod $KERNEL_MODS/$mod.ko
+    done
     # Create dev nodes
     log_progress_msg "; Creating devices "
     [ -e /dev/linux-kernel-bde ] || mknod /dev/linux-kernel-bde c 127 0
@@ -86,11 +87,9 @@ do_start()
         #   0 if daemon has been started
         #   1 if daemon was already running
         #   2 if daemon could not be started
-        start-stop-daemon --start --make-pidfile --quiet --pidfile $PIDFILE --background \
-        --exec $DAEMON  -- $FBOSS_DAEMON_OPTIONS > /dev/null  || return 1
-    #start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON-$PLATFORM -- \
-    #   $DAEMON_ARGS \
-    #   || return 2
+        start-stop-daemon --start --make-pidfile --quiet --pidfile $PIDFILE \
+          --background --exec $DAEMON -- $FBOSS_DAEMON_OPTIONS > /dev/null \
+          || return 1
     # Add code here, if necessary, that waits for the process to be ready
     # to handle requests from services started subsequently which depend
     # on this one.  As a last resort, sleep for some time.
@@ -122,11 +121,14 @@ do_stop()
     rm -f $PIDFILE
     # if you remove the modules too quickly, the kernel will crash
     sleep 2
-    log_progress_msg "    --- Removing old OpenNSL kernel modules"
-    for mod in `echo $MODS | tr ' ' '\n' | sort -r` ; do
-        log_progress_msg "$mod"
-        rmmod $mod
+    for mod in $MODS; do
+      echo $mod | grep -q kernel && continue
+      log_progress_msg " $mod "
+      rmmod $mod
     done
+    log_progress_msg " linux-kernel-bde "
+    rmmod linux-kernel-bde
+
     return "$RETVAL"
 }
 
